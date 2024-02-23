@@ -14,6 +14,9 @@ const count = ref(1)
 const double = computed(() => count.value * 2)
 const html = computed(() => `<button>HTML! ${count.value}</button>`)
 
+const arr = ref([1, 2, 3])
+const obj = ref({ a: 1, b: 2, c: 3 })
+
 const inc = () => count.value++
 const dec = () => count.value--
 
@@ -40,6 +43,9 @@ const log = (arg: any) => {
   console.log('callback in render effect')
   return arg
 }
+
+const objChange = () => (obj.value = { e: 4, f: 5, g: 6 })
+const arrChange = () => (arr.value = [4, 5, 6])
 </script>
 
 <template>
@@ -56,6 +62,15 @@ const log = (arg: any) => {
     <div v-once>once: {{ count }}</div>
     <div v-pre>{{ count }}</div>
     <div v-cloak>{{ count }}</div>
+
+    <button @click="arrChange">change arr</button>
+    <button @click="objChange">change obj</button>
+
+    <div>arr:</div>
+    <div v-for="(item, index) in arr">{{ item }}-{{ index }}</div>
+
+    <div>obj:</div>
+    <div v-for="(item, index) in obj">{{ item }}-{{ index }}</div>
   </div>
 </template>
 

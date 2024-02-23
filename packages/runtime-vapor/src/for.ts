@@ -1,12 +1,12 @@
 import { type EffectScope, effectScope, isReactive } from '@vue/reactivity'
-import { isArray } from '@vue/shared'
+import { isArray, isObject } from '@vue/shared'
 import { createComment, createTextNode, insert, remove } from './dom'
 import { renderEffect } from './renderWatch'
 import { type Block, type Fragment, fragmentKey } from './render'
 
 interface ForBlock extends Fragment {
   scope: EffectScope
-  s: [any, number] // state, use short key since it's used a lot in generated code
+  s: [any, number | string] // state, use short key since it's used a lot in generated code
   update: () => void
   key: any
   memo: any[] | undefined
@@ -33,6 +33,7 @@ export const createFor = (
   const mount = (
     item: any,
     index: number,
+    key?: string,
     anchor: Node = parentAnchor,
   ): ForBlock => {
     const scope = effectScope()
@@ -41,7 +42,7 @@ export const createFor = (
       nodes: null as any,
       update: null as any,
       scope,
-      s: [item, index],
+      s: [item, key || index],
       key: getKey && getKey(item, index),
       memo: getMemo && getMemo(item),
       [fragmentKey]: true,
@@ -56,8 +57,16 @@ export const createFor = (
 
   const mountList = (source: any[], offset = 0) => {
     if (offset) source = source.slice(offset)
-    for (let i = 0, l = source.length; i < l; i++) {
-      mount(source[i], i + offset)
+    if (isArray(source)) {
+      for (let i = 0, l = source.length; i < l; i++) {
+        mount(source[i], i + offset)
+      }
+    } else if (isObject(source)) {
+      const keys = Object.keys(source)
+      for (let i = 0, l = keys.length; i < l; i++) {
+        const key = keys[i]
+        mount(source[key], i + offset, key)
+      }
     }
   }
 
@@ -118,8 +127,8 @@ export const createFor = (
     const source = src() as any[]
     const newLength = source.length
     const oldLength = oldBlocks.length
-    newBlocks = new Array(newLength)
 
+    newBlocks = new Array(newLength)
     if (!isMounted) {
       isMounted = true
       mountList(source)
