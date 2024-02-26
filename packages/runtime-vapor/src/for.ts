@@ -56,13 +56,14 @@ export const createFor = (
   }
 
   const mountList = (source: any[], offset = 0) => {
-    if (offset) source = source.slice(offset)
     if (isArray(source)) {
+      if (offset) source = source.slice(offset)
       for (let i = 0, l = source.length; i < l; i++) {
         mount(source[i], i + offset)
       }
     } else if (isObject(source)) {
-      const keys = Object.keys(source)
+      let keys = Object.keys(source)
+      if (offset) keys = keys.slice(offset)
       for (let i = 0, l = keys.length; i < l; i++) {
         const key = keys[i]
         mount(source[key], i + offset, key)
@@ -125,7 +126,10 @@ export const createFor = (
   renderEffect(() => {
     // TODO support more than arrays
     const source = src() as any[]
-    const newLength = source.length
+    const newLength =
+      !isArray(source) && isObject(source)
+        ? Object.keys(source).length
+        : source.length
     const oldLength = oldBlocks.length
 
     newBlocks = new Array(newLength)
@@ -145,9 +149,23 @@ export const createFor = (
       } else if (!getKey) {
         // unkeyed fast path
         const commonLength = Math.min(newLength, oldLength)
-        for (let i = 0; i < commonLength; i++) {
-          update((newBlocks[i] = oldBlocks[i]), source[i])
+        if (isObject(source) && !isArray(source)) {
+          const keys = Object.keys(source)
+          for (let i = 0; i < commonLength; i++) {
+            const key = keys[i]
+            update(
+              (newBlocks[i] = oldBlocks[i]),
+              source[key],
+              newBlocks[i].s[1],
+              key,
+            )
+          }
+        } else {
+          for (let i = 0; i < commonLength; i++) {
+            update((newBlocks[i] = oldBlocks[i]), source[i])
+          }
         }
+
         mountList(source, oldLength)
         for (let i = newLength; i < oldLength; i++) {
           unmount(oldBlocks[i])
