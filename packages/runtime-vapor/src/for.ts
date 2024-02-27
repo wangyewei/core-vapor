@@ -33,8 +33,8 @@ export const createFor = (
   const mount = (
     item: any,
     index: number,
-    key?: string,
     anchor: Node = parentAnchor,
+    key?: string,
   ): ForBlock => {
     const scope = effectScope()
     // TODO support object keys etc.
@@ -66,7 +66,7 @@ export const createFor = (
       if (offset) keys = keys.slice(offset)
       for (let i = 0, l = keys.length; i < l; i++) {
         const key = keys[i]
-        mount(source[key], i + offset, key)
+        mount(source[key], i + offset, parentAnchor, key)
       }
     }
   }
@@ -213,7 +213,13 @@ export const createFor = (
                 ? normalizeAnchor(newBlocks[nextPos].nodes)
                 : parentAnchor
             while (i <= e2) {
-              mount(source[i], i, anchor)
+              if (isObject(source) && !isArray(source)) {
+                const keys = Object.keys(source)
+                const key = keys[i]
+                mount(source[key], i, anchor, key)
+              } else {
+                mount(source[i], i, anchor)
+              }
               i++
             }
           }
@@ -278,12 +284,18 @@ export const createFor = (
                 } else {
                   moved = true
                 }
-                update(
-                  (newBlocks[newIndex] = prevBlock),
-                  source[newIndex],
-                  i,
-                  newIndex,
-                )
+                if (isObject(source) && !isArray(source)) {
+                  const keys = Object.keys(source)
+                  const key = keys[newIndex]
+                  update((newBlocks[newIndex] = prevBlock), source[key], i, key)
+                } else {
+                  update(
+                    (newBlocks[newIndex] = prevBlock),
+                    source[newIndex],
+                    i,
+                    newIndex,
+                  )
+                }
                 patched++
               }
             }
@@ -304,7 +316,13 @@ export const createFor = (
                 : parentAnchor
             if (newIndexToOldIndexMap[i] === 0) {
               // mount new
-              mount(source[nextIndex], nextIndex, anchor)
+              if (isObject(source) && !isArray(source)) {
+                const keys = Object.keys(source)
+                const key = keys[nextIndex]
+                mount(source[key], nextIndex, anchor, key)
+              } else {
+                mount(source[nextIndex], nextIndex, anchor)
+              }
             } else if (moved) {
               // move if:
               // There is no stable subsequence (e.g. a reverse)

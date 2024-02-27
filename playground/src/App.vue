@@ -44,7 +44,7 @@ const log = (arg: any) => {
   return arg
 }
 
-const objChange = () => (obj.value = { e: 4, f: 5, g: 6 })
+const objChange = () => (obj.value = { a: 'x', e: 4, f: 5, g: 6 })
 const arrChange = () => (arr.value = [4, 5, 6])
 </script>
 
@@ -67,10 +67,10 @@ const arrChange = () => (arr.value = [4, 5, 6])
     <button @click="objChange">change obj</button>
 
     <div>arr:</div>
-    <div v-for="(item, index) in arr">{{ item }}-{{ index }}</div>
+    <div v-for="(item, index) in arr" :key="item">{{ item }}-{{ index }}</div>
 
     <div>obj:</div>
-    <div v-for="(item, index) in obj">{{ item }}-{{ index }}</div>
+    <div v-for="(item, index) in obj" :key="item">{{ item }}-{{ index }}</div>
   </div>
 </template>
 
